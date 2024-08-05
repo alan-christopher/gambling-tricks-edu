@@ -1,0 +1,342 @@
+\PassOptionsToPackage{table}{xcolor}
+\documentclass[pdf]{beamer}
+\mode<presentation>{\usetheme{Dresden}}
+\usepackage{lmodern}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath,textcomp,amssymb,geometry,graphicx,listings,array,color,amsthm}
+
+\usepackage[noend]{algpseudocode}
+
+\usepackage[
+backend=biber,
+sorting=ynt,
+]{biblatex}
+\addbibresource{lecture.bib}
+
+\usepackage{tikz}
+\usepackage{multicol}
+\usetikzlibrary{shapes,snakes}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usetikzlibrary{fit}
+\usetikzlibrary{math}
+
+%% For on-slide alerting of nodes
+\tikzstyle{alert} = [text=black, fill=blue!20, draw=black]
+\setbeamercolor{alerted text}{fg=blue}
+\tikzset{alerton/.code args={<#1>}{%
+  \only<#1>{\pgfkeysalso{alert}} % \pgfkeysalso doesn't change the path
+}}
+
+%% utils for removing uninteresting sections from the navbar
+%% https://tex.stackexchange.com/questions/317774/hide-section-from-sidebar
+\makeatletter
+\let\beamer@writeslidentry@miniframeson=\beamer@writeslidentry%
+\def\beamer@writeslidentry@miniframesoff{%
+  \expandafter\beamer@ifempty\expandafter{\beamer@framestartpage}{}% does not happen normally
+  {%else
+    % removed \addtocontents commands
+    \clearpage\beamer@notesactions%
+  }
+}
+\newcommand*{\miniframeson}{\let\beamer@writeslidentry=\beamer@writeslidentry@miniframeson}
+\newcommand*{\miniframesoff}{\let\beamer@writeslidentry=\beamer@writeslidentry@miniframesoff}
+\makeatother
+
+%% preamble
+\title{Beating the House}
+\subtitle{You will not beat the house}
+\author{A.C.}
+\date{\today}
+
+\AtBeginSection[]
+{
+  \miniframesoff
+  \begin{frame}{Outline}
+    \tableofcontents[currentsection,hideothersubsections]
+  \end{frame}
+  \miniframeson
+}
+
+\definecolor{darkred}{rgb}{0.7,0,0}
+\definecolor{darkgreen}{rgb}{0,0.5,0}
+\definecolor{darkblue}{rgb}{0,0,0.5}
+\definecolor{darkpurple}{rgb}{0.4, 0.0, 0.4}
+
+%% Code font settings
+\lstset{
+  showstringspaces=false,
+  basicstyle=\scriptsize\ttfamily,
+  commentstyle=\color{darkred},
+  stringstyle=\color{darkgreen},
+  keywordstyle=\bfseries\color{darkpurple},
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Start of Actual slides %
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\section{Putting It All On Black}
+
+\subsection{Playing it Straight}
+
+\begin{frame}{The Rules}
+  \begin{enumerate}
+  \item Place a bet with probability $p$ and payout ratio $r$.
+  \item The wheel spins.
+  \item Get paid \ldots or don't.
+    \begin{enumerate}
+      \item House advantage: $pr < 1$
+    \end{enumerate}
+  \end{enumerate}
+
+  \[ X = \alpha \left(-1 + r\mathbb{I}(\text{Win})\right) \]
+\end{frame}
+
+\begin{frame}{Open Decisions}
+  \begin{itemize}
+  \item \sout{What bet to place.}
+    \begin{itemize}
+    \item Black feels lucky.
+    \item $p \approx 0.47$
+    \item $r = 2$
+    \end{itemize}
+  \item How much to bet.
+  \item When to walk away.
+  \end{itemize}
+\end{frame}
+
+\subsection{Playing it Straight}
+\begin{frame}{The System}
+  \begin{algorithmic}
+    \Procedure{ConstantBets}{}
+    \State $\alpha \gets 1$
+    \While{\text{true}}
+      \State $\text{bet}(\alpha)$
+    \EndWhile
+    \EndProcedure
+  \end{algorithmic}
+\end{frame}
+
+\begin{frame}{Playing it Out}
+  \[ W_n \sim \text{Bin(n, p)} \]
+  \[ X_n = r \cdot W_n - n\]
+
+  \pause
+  \[ \text{Var}(X_n) = r^2 \text{Var}(W_n) = npqr^2\]
+  \[ E(X_n) = r\cdot E(W_n) - n = npr - n = n(pr -1) \]
+  \pause
+
+  Expected losses grow linearly in $n$, stddev as $\sqrt{n}$. Per Chebyshev, we
+are going broke, \emph{almost certainly}.
+\end{frame}
+
+\subsection{Double or Nothing!}
+\begin{frame}{The System}
+  \begin{algorithmic}
+    \Procedure{MartingaleBetting}{}
+    \State $\alpha \gets 1$
+    \While{\text{true}}
+      \State $\text{bet}(\alpha)$
+      \If{$\text{Win}$}
+        \State \Return
+      \Else
+        \State $\alpha \gets 2 \cdot \alpha$
+      \EndIf
+    \EndWhile
+    \EndProcedure
+  \end{algorithmic}
+\end{frame}
+
+\begin{frame}{Playing it Out}
+  Let $N$ be the round of betting where we finally win:
+
+  \[ X_N = -1 - 2 - 4 \cdots -2^{N-1} + 2^N = 1 \]
+
+  $p$ nowhere to be found. Guaranteed profit!
+
+  \pause
+  On \emph{arbitrarily} bad bets!
+\end{frame}
+
+\begin{frame}{Alas!}
+  \begin{itemize}
+  \item Very hard to get unlimited betting rounds.
+    \begin{itemize}
+    \item Credit limits
+    \item Table limits
+    \end{itemize}
+  \end{itemize}
+
+  \pause
+  Exercise for the reader: what happens when we get cut off after $N$ rounds?
+\end{frame}
+
+\subsection{Never Say Die}
+\begin{frame}{The System}
+  \begin{algorithmic}
+    \Procedure{AntiMartingaleBetting}{}
+    \State $\text{reserves} \gets 1.0$
+    \State $\text{target} \gets 1.0$
+    \While{$\text{reserves} \leq \text{target}$}
+      \State $\alpha \gets \text{reserves} \cdot 0.5$
+      \State $\text{bet}(\alpha)$
+      \If{$\text{Win}$}
+        \State $\text{reserves} \gets \text{reserves} + \alpha$
+      \Else
+        \State $\text{reserves} \gets \text{reserves} - \alpha$
+      \EndIf
+    \EndWhile
+    \EndProcedure
+  \end{algorithmic}
+\end{frame}
+
+\begin{frame}{Playing it Out}
+
+  \[ P(\text{Lose}) = 0 \]
+
+  \pause
+
+  \[ P_{-1} = 1 \]
+  \[ P_{0} = p + q P_{1}\]
+  \[ P_{1} = p P_{0}  + q P_{2} \]
+  \[ P_{n} = p P_{n-1} + qP_{n+1} \]
+  \[ pP_{n} + qP_n = p P_{n-1} + qP_{n+1} \]
+
+  \pause
+  Massage. Massage.
+  
+  \pause
+  % TODO: verify this by hand. As it is this is by sloppy reduction to https://www.columbia.edu/~ks20/FE-Notes/4700-07-Notes-GR.pdf
+  \[ P_0 = \frac{p}{q} \]
+  
+\end{frame}
+
+\begin{frame}{Alas!}
+  We've created a gambler's ruin problem, just flipped and in log scale.
+
+  \begin{itemize}
+  \item Nonzero probability of winning \emph{at every step}.
+  \item Nonzero probability of never walking away from the table,
+  \item Also, need to be able to place arbitrarily small bets.
+  \end{itemize}
+\end{frame}
+
+\section{Go Razzmatazz, Go!}
+\subsection{}
+\begin{frame}{The Rules}
+  \begin{enumerate}
+  \item $n$ horses running, each with probability of winning $p_i$ and payout odds $r_i$
+    \begin{enumerate}
+      \item House advantage: $\sum_i \frac{1}{r_i} > 1$
+    \end{enumerate}
+  \item $\alpha_i$ units on each horse
+  \item The horses run.
+  \item Get paid according to your wager on the winning horse.
+  \end{enumerate}
+
+  \[ X = \sum_i \left( \alpha_i (-1 + r_i\mathbb{I}(h_i)) \right) \]
+\end{frame}
+
+\begin{frame}{Open Decisions}
+  \begin{itemize}
+  \item Which horse(s) to back.
+  \item How much to bet.
+  \item \sout{When to walk away.}
+    \begin{itemize}
+      \item We're going to be doing single round betting here.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Pick the Right Horse}
+  \begin{itemize}
+  \item We could play it straight, as we did in roulette.
+  \item More (any) epistemic uncertainty
+  \item Might even be able to turn a profit, if you're smarter than the market.
+  \item Still gambling though. We're here to win, \emph{guaranteed}.
+  \end{itemize}
+\end{frame}
+
+
+\subsection{Some Low-Level Accounting}
+\begin{frame}{The Booky's Favorite}
+  \begin{itemize}
+  \item Suppose there is an old nag in the race, Rocinante.
+  \item Rocinante is a long, long, \emph{long} shot. Maybe 1 in 1000.
+  \item Book-maker offers a special on Rocinante bets: 2000 to 1.
+    \begin{itemize}
+    \item Does not update the rest of the book.
+    \item House advantage slips. Now $\sum_i \frac{1}{r_i} < 1$
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The Obvious Approach}
+  \begin{itemize}
+  \item Could just take the bookie up on the special.
+  \item Bet is positive valued in expectation
+  \item But I still need to make the rent this month, and this is a single round of gambling
+  \item Too rich for my blood, can we do better?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Some Tulip Math}
+  \[ X = \sum_i \left( \alpha_i (-1 + r_i\mathbb{I}(h_i)) \right) \]
+
+  What happens if we try to clear $r_i$ out of our RV? Must have $\alpha_i = \frac{1}{r_i}$:
+
+  \[ X = \sum_i \left( -\frac{1}{r_i} + \mathbb{I}(h_i)) \right) = 1 - \frac{1}{r_i}\]
+
+  \pause
+
+  That's a fixed payout.
+
+  \pause
+
+  A fixed, \emph{positive} payout. This is what's known as a Dutch Book.
+\end{frame}
+
+\begin{frame}{Alas!}
+  Finding a bookie setting a line that is susceptible to a Dutch Book is\ldots
+  not easy.
+\end{frame}
+
+\subsection{A Bigger, Dutcher Book}
+\begin{frame}{$N$ bookies, One Race}
+  \begin{itemize}
+  \item Suppose multiple bookies are taking action on a single race.
+  \item They have different clientelle, and are setting different lines
+    \begin{itemize}
+    \item Bookie doesn't care about odds, bookie wants to take a vig off of evenly spread bets.
+    \item Just like we did with our Dutch book.
+    \end{itemize}
+  \item Call the most favorable odds across all book makers for each horse $r^*_i$
+  \end{itemize}
+
+  If $ \sum_i r_i^* < 1 $ we have a composite Dutch book! Let the arbitrage
+times roll.
+\end{frame}
+
+\begin{frame}{Alas!}
+
+Efficient market theory, like all theories, is wrong. But it's not often
+wrong enough for this to be viable.
+
+\pause
+
+With the right combination of speed and luck, however, arbitrage is possible. A
+frightening amount of effort goes into exactly these games, but played against
+stock markets.
+
+\pause
+
+Also, we haven't so much beaten the house as become it.
+
+\end{frame}
+
+\end{document}
