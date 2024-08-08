@@ -1,4 +1,4 @@
-lecture.pdf: lecture.tex lecture.bib
+lecture.pdf: lecture.tex
 	latexmk -pdf
 
 clean:
