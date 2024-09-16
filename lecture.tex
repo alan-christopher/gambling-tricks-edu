@@ -178,15 +178,15 @@ are going broke, \emph{almost certainly}.
 \begin{frame}{The System}
   \begin{algorithmic}
     \Procedure{AntiMartingaleBetting}{}
+    \State $\text{target} \gets 2.0$
     \State $\text{reserves} \gets 1.0$
-    \State $\text{target} \gets 1.0$
     \State $\alpha \gets 0.5$
-    \While{$\text{reserves} \leq \text{target}$}
+    \While{$\text{reserves} < \text{target}$}
       \State $\text{reserves} \gets \text{reserves} + \text{bet}(\alpha)$
-      \If{$\alpha \geq \text{reserves}$}
+      \If{$\text{reserves} = \alpha$}
         \State $\alpha \gets 0.5 \cdot \alpha$
       \EndIf
-      \If{$\alpha \leq 0.25 \cdot \text{reserves}$}
+      \If{$\alpha \leq 0.25 = \text{reserves}$}
         \State $\alpha \gets 2 \cdot \alpha$
       \EndIf
     \EndWhile
@@ -329,9 +329,9 @@ Let $\hat{p} = \frac{p^2}{1-pq}$, $\hat{q} = 1- \hat{p}$
 \begin{frame}{Amongst the Tulips}
   \[ X = \sum_i \left[ \alpha_i (-1 + r_i\mathbb{I}(h_i)) \right] \]
 
-  What happens if we try to clear $r_i$ out of our RV? \pause Must have $\alpha_i = \frac{1}{r_i}$:
+  What happens if we try to clear $r_i$ out of our RV? \pause Set $\alpha_i = \frac{1}{r_i}$:
 
-  \[ X = \sum_i \left( -\frac{1}{r_i} + \mathbb{I}(h_i)) \right) = 1 - \frac{1}{r_i}\]
+  \[ X = \sum_i \left( -\frac{1}{r_i} + \mathbb{I}(h_i) \right) = 1 - \sum \frac{1}{r_i}\]
 
   \pause
 
